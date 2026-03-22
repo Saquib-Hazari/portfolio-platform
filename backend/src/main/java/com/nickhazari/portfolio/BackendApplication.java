@@ -7,12 +7,9 @@ import org.springframework.context.annotation.Bean;
 
 import com.nickhazari.portfolio.repositories.UserRepository;
 
-import lombok.AllArgsConstructor;
+@SpringBootApplication(scanBasePackages = "com.nickhazari")
 
-@SpringBootApplication
-@AllArgsConstructor
 public class BackendApplication {
-	public UserRepository userRepository;
 
 	public static void main(String[] args) {
 		SpringApplication.run(BackendApplication.class, args);

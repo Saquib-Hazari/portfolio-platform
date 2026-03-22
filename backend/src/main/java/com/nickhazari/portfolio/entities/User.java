@@ -9,8 +9,16 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 @Table(name = "users")
 public class User {
   @Id
@@ -26,6 +34,9 @@ public class User {
 
   @Column(name = "password")
   private String password;
+
+  @Column(name = "role")
+  private String role;
 
   @Column(name = "profile_image")
   private String profileImage;
