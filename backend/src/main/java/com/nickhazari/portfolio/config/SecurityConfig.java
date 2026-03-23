@@ -7,11 +7,11 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.nickhazari.security.JwtFilter;
 
@@ -19,16 +19,17 @@ import com.nickhazari.security.JwtFilter;
 @EnableWebSecurity
 public class SecurityConfig {
   private final JwtFilter jwtFilter;
-  private final UserDetailsService userDetailsService;
+  private final CorsConfigurationSource corsConfigurationSource;
 
-  public SecurityConfig(JwtFilter jwtFilter, UserDetailsService userDetailsService) {
+  public SecurityConfig(JwtFilter jwtFilter, CorsConfigurationSource corsConfigurationSource) {
     this.jwtFilter = jwtFilter;
-    this.userDetailsService = userDetailsService;
+    this.corsConfigurationSource = corsConfigurationSource;
   }
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource))
         .csrf(csrf -> csrf.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth

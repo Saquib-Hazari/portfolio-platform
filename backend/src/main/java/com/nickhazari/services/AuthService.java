@@ -62,7 +62,7 @@ public class AuthService {
     user.setPassword(passwordEncoder.encode(request.getPassword()));
     user.setRole("ROLE_USER");
 
-    userRepository.save(user);
+    userRepository.saveAndFlush(user);
 
     String token = jwtService.generateAccessToken(mapToUserDto(user));
 
