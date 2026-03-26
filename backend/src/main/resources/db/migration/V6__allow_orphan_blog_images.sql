@@ -1,0 +1,2 @@
+ALTER TABLE blog_images
+  ALTER COLUMN blog_id DROP NOT NULL;

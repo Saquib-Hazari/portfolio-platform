@@ -9,12 +9,17 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.nickhazari.portfolio.dtos.BlogCreateRequest;
 import com.nickhazari.portfolio.dtos.BlogDto;
+import com.nickhazari.portfolio.dtos.BlogUpdateRequest;
 import com.nickhazari.portfolio.dtos.UserDto;
 import com.nickhazari.portfolio.entities.Blog;
 import com.nickhazari.portfolio.entities.BlogImage;
 import com.nickhazari.portfolio.entities.BlogTag;
 import com.nickhazari.portfolio.entities.User;
+import com.nickhazari.portfolio.exception.BadRequestException;
+import com.nickhazari.portfolio.exception.NotFoundException;
+import com.nickhazari.portfolio.repositories.BlogImageRepository;
 import com.nickhazari.portfolio.repositories.BlogRepository;
 import com.nickhazari.portfolio.repositories.UserRepository;
 
@@ -24,9 +29,10 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class BlogService {
   private final BlogRepository blogRepository;
+  private final BlogImageRepository blogImageRepository;
   private final UserRepository userRepository;
 
-  public BlogDto createBlog(BlogDto blogDto) {
+  public BlogDto createBlog(BlogCreateRequest blogDto) {
     Blog blog = mapToEntity(blogDto);
     blog.setCreatedAt(LocalDate.now());
     Blog saved = blogRepository.save(blog);
@@ -37,29 +43,60 @@ public class BlogService {
     return blogRepository.findAll().stream().map(this::mapToDto).toList();
   }
 
-  public BlogDto updateBlog(UUID id, BlogDto updated) {
-    Blog blog = blogRepository.findById(id).orElseThrow(() -> new RuntimeException("Blog not found."));
+  public BlogDto getBlog(UUID id) {
+    Blog blog = blogRepository.findById(id)
+      .orElseThrow(() -> new NotFoundException("Blog not found."));
+    return mapToDto(blog);
+  }
 
-    blog.setTitle(updated.getTitle());
-    blog.setSubtitle(updated.getSubtitle());
-    blog.setDescription(updated.getDescription());
-    blog.setCode(updated.getCode());
-    blog.setImage(updated.getImage());
+  public BlogDto updateBlog(UUID id, BlogUpdateRequest updated) {
+    Blog blog = blogRepository.findById(id).orElseThrow(() -> new NotFoundException("Blog not found."));
+
+    if (updated.getTitle() != null) {
+      blog.setTitle(updated.getTitle());
+    }
+    if (updated.getSubtitle() != null) {
+      blog.setSubtitle(updated.getSubtitle());
+    }
+    if (updated.getDescription() != null) {
+      blog.setDescription(updated.getDescription());
+    }
+    if (updated.getCode() != null) {
+      blog.setCode(updated.getCode());
+    }
+    if (updated.getImage() != null) {
+      blog.setImage(updated.getImage());
+      List<BlogImage> nextImages = buildImages(updated.getImage(), blog);
+      if (blog.getImages() == null) {
+        blog.setImages(new ArrayList<>());
+      }
+      blog.getImages().clear();
+      blog.getImages().addAll(nextImages);
+    }
     if (updated.getAuthor() != null) {
       blog.setAuthor(resolveAuthor(updated.getAuthor()));
     }
-    blog.setTags(buildTags(updated.getTags(), blog));
-    blog.setImages(buildImages(updated.getImage(), blog));
+    if (updated.getTags() != null) {
+      List<BlogTag> nextTags = buildTags(updated.getTags(), blog);
+      if (blog.getTags() == null) {
+        blog.setTags(new ArrayList<>());
+      }
+      blog.getTags().clear();
+      blog.getTags().addAll(nextTags);
+    }
 
     Blog saved = blogRepository.save(blog);
     return mapToDto(saved);
   }
 
   public void deleteBlog(UUID id) {
+    if (!blogRepository.existsById(id)) {
+      throw new NotFoundException("Blog not found.");
+    }
     blogRepository.deleteById(id);
   }
 
-  private Blog mapToEntity(BlogDto dto) {
+  private Blog mapToEntity(BlogCreateRequest dto) {
     Blog blog = new Blog();
     blog.setTitle(dto.getTitle());
     blog.setSubtitle(dto.getSubtitle());
@@ -91,7 +128,7 @@ public class BlogService {
 
   private List<BlogTag> buildTags(List<String> tags, Blog blog) {
     if (tags == null || tags.isEmpty()) {
-      return List.of();
+      return new ArrayList<>();
     }
     List<BlogTag> result = new ArrayList<>();
     for (String tagValue : tags) {
@@ -102,18 +139,11 @@ public class BlogService {
       if (trimmed.isEmpty()) {
         continue;
       }
-      try {
-        long tagId = Long.parseLong(trimmed);
-        BlogTag tag = new BlogTag();
-        tag.setBlog(blog);
-        tag.setTagId(tagId);
-        result.add(tag);
-      } catch (NumberFormatException ignored) {
-        BlogTag tag = new BlogTag();
-        tag.setBlog(blog);
-        tag.setTagName(trimmed);
-        result.add(tag);
-      }
+      // Treat all incoming tags as names to avoid FK issues with tags table.
+      BlogTag tag = new BlogTag();
+      tag.setBlog(blog);
+      tag.setTagName(trimmed);
+      result.add(tag);
     }
     return result;
   }
@@ -129,28 +159,68 @@ public class BlogService {
 
   private List<BlogImage> buildImages(String imageUrl, Blog blog) {
     if (imageUrl == null || imageUrl.isBlank()) {
-      return Collections.emptyList();
+      return new ArrayList<>();
+    }
+    BlogImage existing = resolveStoredImage(imageUrl);
+    if (existing != null) {
+      existing.setBlog(blog);
+      existing.setImageUrl(imageUrl);
+      existing.setAltText(null);
+      List<BlogImage> result = new ArrayList<>();
+      result.add(existing);
+      return result;
     }
     BlogImage image = new BlogImage();
     image.setBlog(blog);
     image.setImageUrl(imageUrl);
     image.setAltText(null);
-    return List.of(image);
+    List<BlogImage> result = new ArrayList<>();
+    result.add(image);
+    return result;
+  }
+
+  private BlogImage resolveStoredImage(String imageUrl) {
+    if (imageUrl == null || imageUrl.isBlank()) {
+      return null;
+    }
+    String trimmed = imageUrl.trim();
+    String marker = "/api/uploads/images/";
+    int idx = trimmed.indexOf(marker);
+    if (idx >= 0) {
+      String idPart = trimmed.substring(idx + marker.length());
+      return fetchImageById(idPart);
+    }
+    if (trimmed.startsWith("uploads/") || trimmed.startsWith("/uploads/")) {
+      return null;
+    }
+    if (trimmed.startsWith("images/") || trimmed.startsWith("/images/")) {
+      String idPart = trimmed.substring(trimmed.lastIndexOf('/') + 1);
+      return fetchImageById(idPart);
+    }
+    return null;
+  }
+
+  private BlogImage fetchImageById(String idPart) {
+    try {
+      return blogImageRepository.findById(UUID.fromString(idPart)).orElse(null);
+    } catch (IllegalArgumentException ex) {
+      return null;
+    }
   }
 
   private User resolveAuthor(UserDto author) {
     if (author == null) {
-      throw new IllegalArgumentException("author is required.");
+      throw new BadRequestException("author is required.");
     }
     if (author.getId() != null) {
       return userRepository.findById(author.getId())
-        .orElseThrow(() -> new RuntimeException("Author not found."));
+        .orElseThrow(() -> new NotFoundException("Author not found."));
     }
     if (author.getEmail() != null && !author.getEmail().isBlank()) {
       return userRepository.findByEmail(author.getEmail())
-        .orElseThrow(() -> new RuntimeException("Author not found."));
+        .orElseThrow(() -> new NotFoundException("Author not found."));
     }
-    throw new IllegalArgumentException("author.id or author.email is required.");
+    throw new BadRequestException("author.id or author.email is required.");
   }
 
   private UserDto mapToDto(User user) {

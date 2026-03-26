@@ -16,6 +16,11 @@ spring:
   jwt:
     secret: ${JWT_SECRET:c3ByaW5nLWp3dC1zZWNyZXQtMzItYnl0ZS1rZXktMTIzNDU2Nzg5MA==}
     access:
-      expiration: ${ACCESS_EXPIRATION:900000}
+      expiration: ${ACCESS_EXPIRATION:15m}
     refresh:
-      expiration: ${REFRESH_EXPIRATION:1209600000}
+      expiration: ${REFRESH_EXPIRATION:14d}
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB

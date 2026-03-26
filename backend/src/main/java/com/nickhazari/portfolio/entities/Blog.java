@@ -31,23 +31,23 @@ public class Blog {
   @Column(name = "id")
   private UUID id;
 
-  @Column(name = "title")
+  @Column(name = "title", columnDefinition = "TEXT")
   private String title;
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "author_id", nullable = false)
   private User author;
 
-  @Column(name = "description")
+  @Column(name = "description", columnDefinition = "TEXT")
   private String subtitle;
 
-  @Column(name = "body")
+  @Column(name = "body", columnDefinition = "TEXT")
   private String description;
 
-  @Column(name = "code_snippet")
+  @Column(name = "code_snippet", columnDefinition = "TEXT")
   private String code;
 
-  @Column(name = "cover_image")
+  @Column(name = "cover_image", columnDefinition = "TEXT")
   private String image;
 
   @Column(name = "publish")

@@ -1,0 +1,6 @@
+ALTER TABLE blogs
+  ALTER COLUMN title TYPE TEXT,
+  ALTER COLUMN description TYPE TEXT,
+  ALTER COLUMN body TYPE TEXT,
+  ALTER COLUMN code_snippet TYPE TEXT,
+  ALTER COLUMN cover_image TYPE TEXT;

@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS image_import_log (
+  id SERIAL PRIMARY KEY,
+  completed_at TIMESTAMP NOT NULL DEFAULT NOW()
+);

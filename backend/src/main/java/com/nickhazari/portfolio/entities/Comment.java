@@ -1,5 +1,6 @@
 package com.nickhazari.portfolio.entities;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -15,38 +16,30 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity
-@Table(name = "blog_images")
+@Table(name = "comments")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BlogImage {
+public class Comment {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "id")
   private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "blog_id")
+  @JoinColumn(name = "blog_id", nullable = false)
   private Blog blog;
 
-  @Column(name = "image_url")
-  private String imageUrl;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
-  @JdbcTypeCode(SqlTypes.BINARY)
-  @Column(name = "image_data")
-  private byte[] imageData;
+  @Column(name = "content")
+  private String content;
 
-  @Column(name = "content_type")
-  private String contentType;
-
-  @Column(name = "file_name")
-  private String fileName;
-
-  @Column(name = "alt_text")
-  private String altText;
+  @Column(name = "created_at")
+  private LocalDateTime createdAt;
 }

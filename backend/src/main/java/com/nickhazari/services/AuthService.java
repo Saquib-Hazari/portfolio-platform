@@ -10,6 +10,8 @@ import com.nickhazari.portfolio.dtos.LoginRequest;
 import com.nickhazari.portfolio.dtos.SignupRequest;
 import com.nickhazari.portfolio.dtos.UserDto;
 import com.nickhazari.portfolio.entities.User;
+import com.nickhazari.portfolio.exception.ConflictException;
+import com.nickhazari.portfolio.exception.UnauthorizedException;
 import com.nickhazari.portfolio.repositories.UserRepository;
 import com.nickhazari.security.JwtService;
 
@@ -28,16 +30,17 @@ public class AuthService {
   // 🔐 LOGIN
   // =================
   public AuthUserDto authenticate(LoginRequest request) {
+    String normalizedEmail = normalizeEmail(request.getEmail());
 
     // 1. Authenticate credentials
     authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(
-            request.getEmail(),
+            normalizedEmail,
             request.getPassword()));
 
     // 2. Fetch user
-    User user = userRepository.findByEmail(request.getEmail())
-        .orElseThrow(() -> new RuntimeException("User not found"));
+    User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
+        .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
     // 3. Generate token
     String token = jwtService.generateAccessToken(mapToUserDto(user));
@@ -50,15 +53,16 @@ public class AuthService {
   // 🆕 REGISTER
   // =================
   public AuthUserDto register(SignupRequest request) {
+    String normalizedEmail = normalizeEmail(request.getEmail());
 
     // Check if user exists
-    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-      throw new RuntimeException("User already exists");
+    if (userRepository.findByEmailIgnoreCase(normalizedEmail).isPresent()) {
+      throw new ConflictException("User already exists");
     }
 
     User user = new User();
     user.setUserName(request.getUsername());
-    user.setEmail(request.getEmail());
+    user.setEmail(normalizedEmail);
     user.setPassword(passwordEncoder.encode(request.getPassword()));
     user.setRole("ROLE_USER");
 
@@ -67,6 +71,13 @@ public class AuthService {
     String token = jwtService.generateAccessToken(mapToUserDto(user));
 
     return mapToDto(user, token);
+  }
+
+  private String normalizeEmail(String email) {
+    if (email == null) {
+      return null;
+    }
+    return email.trim().toLowerCase();
   }
 
   // =================
