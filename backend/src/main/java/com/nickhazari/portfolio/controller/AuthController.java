@@ -4,16 +4,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.validation.Valid;
 import com.nickhazari.portfolio.dtos.AuthUserDto;
 import com.nickhazari.portfolio.dtos.LoginRequest;
 import com.nickhazari.portfolio.dtos.SignupRequest;
 import com.nickhazari.services.AuthService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -37,6 +38,6 @@ public class AuthController {
 
   @RequestMapping(value = "/logout", method = { RequestMethod.POST, RequestMethod.GET })
   public ResponseEntity<?> logout() {
-    return ResponseEntity.ok().body("Logged out");
+    return ResponseEntity.ok().body("Logged Out!");
   }
 }
