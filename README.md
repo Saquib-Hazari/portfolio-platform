@@ -2,7 +2,7 @@
 
 A modern portfolio platform with authentication, blogs, comments, reactions, admin workflows, and a clean UX. Built end‑to‑end with a production‑ready setup.
 
-**Live Demo:** [](https://react-frontend-zlql.vercel.app/) 
+**Live Demo:** https://react-frontend-zlql.vercel.app/ 
 
 ---
 
