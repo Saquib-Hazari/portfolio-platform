@@ -2,8 +2,7 @@
 
 A modern portfolio platform with authentication, blogs, comments, reactions, admin workflows, and a clean UX. Built end‑to‑end with a production‑ready setup.
 
-**Live Demo:** https://react-frontend-9tix.vercel.app  
-**Backend API:** https://portfolio-backend-ecaf.onrender.com
+**Live Demo:** [](https://react-frontend-zlql.vercel.app/) 
 
 ---
 
@@ -113,8 +112,7 @@ VITE_API_URL=https://portfolio-backend-ecaf.onrender.com
 
 ## Links
 
-- Live App: https://react-frontend-9tix.vercel.app
-- Backend API: https://portfolio-backend-ecaf.onrender.com
+- Live App: https://react-frontend-zlql.vercel.app/
 
 ---
 
